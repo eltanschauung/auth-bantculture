@@ -17,15 +17,13 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
       passwords_path: Application.get_env(:auth_bantculture_com, :passwords_path),
       access_path: Application.get_env(:auth_bantculture_com, :access_path),
       access_denied_log_path: Application.get_env(:auth_bantculture_com, :access_denied_log_path),
-      success_redirect_url: Application.get_env(:auth_bantculture_com, :success_redirect_url),
-      blocked_cidrs: Application.get_env(:auth_bantculture_com, :blocked_cidrs)
+      success_redirect_url: Application.get_env(:auth_bantculture_com, :success_redirect_url)
     ]
 
     Application.put_env(:auth_bantculture_com, :passwords_path, passwords_path)
     Application.put_env(:auth_bantculture_com, :access_path, access_path)
     Application.put_env(:auth_bantculture_com, :access_denied_log_path, denied_path)
     Application.put_env(:auth_bantculture_com, :success_redirect_url, "https://bantculture.com")
-    Application.put_env(:auth_bantculture_com, :blocked_cidrs, ["110.146.137.0/16"])
 
     on_exit(fn ->
       Enum.each(previous, fn {key, value} -> Application.put_env(:auth_bantculture_com, key, value) end)
@@ -88,12 +86,4 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
     assert page =~ "Temporary server problem. Try again later."
   end
 
-  test "blocked networks are rejected before rendering", %{conn: conn} do
-    conn =
-      conn
-      |> Map.put(:remote_ip, {110, 146, 200, 7})
-      |> get("/")
-
-    assert response(conn, 403) == "Forbidden"
-  end
 end

@@ -4,7 +4,6 @@ defmodule AuthBantcultureComWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug AuthBantcultureComWeb.Plugs.BlockDeniedNetworks
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
