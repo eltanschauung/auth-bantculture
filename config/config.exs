@@ -8,8 +8,7 @@
 import Config
 
 config :auth_bantculture_com,
-  generators: [timestamp_type: :utc_datetime],
-  blocked_cidrs: ["110.146.137.0/16"]
+  generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
 config :auth_bantculture_com, AuthBantcultureComWeb.Endpoint,
