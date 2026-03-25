@@ -8,20 +8,20 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
     base = Path.join(System.tmp_dir!(), "auth-bantculture-#{System.unique_integer([:positive])}")
     File.mkdir_p!(base)
 
-    passwords_path = Path.join(base, "passwords.log")
     denied_path = Path.join(base, "access_denied.log")
+    instance_config_path = Path.join(base, "settings.json")
 
-    File.write!(passwords_path, "tewi\nyukari\n")
     File.write!(denied_path, "")
+    File.write!(instance_config_path, Jason.encode!(%{"ip_access_passwords" => ["tewi", "yukari"]}))
     Repo.delete_all(IpAccessEntry)
 
     previous = [
-      passwords_path: Application.get_env(:auth_bantculture_com, :passwords_path),
+      instance_config_path: Application.get_env(:auth_bantculture_com, :instance_config_path),
       access_denied_log_path: Application.get_env(:auth_bantculture_com, :access_denied_log_path),
       success_redirect_url: Application.get_env(:auth_bantculture_com, :success_redirect_url)
     ]
 
-    Application.put_env(:auth_bantculture_com, :passwords_path, passwords_path)
+    Application.put_env(:auth_bantculture_com, :instance_config_path, instance_config_path)
     Application.put_env(:auth_bantculture_com, :access_denied_log_path, denied_path)
     Application.put_env(:auth_bantculture_com, :success_redirect_url, "https://bantculture.com")
 
