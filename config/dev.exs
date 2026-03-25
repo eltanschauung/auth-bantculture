@@ -1,5 +1,21 @@
 import Config
 
+shared_env = Path.expand("~/.config/eirinchan-shared.env")
+
+read_shared_env = fn key ->
+  if File.exists?(shared_env) do
+    shared_env
+    |> File.read!()
+    |> String.split(~r/\R/, trim: true)
+    |> Enum.find_value(fn line ->
+      case String.split(line, "=", parts: 2) do
+        [^key, value] -> value
+        _ -> nil
+      end
+    end)
+  end
+end
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -15,6 +31,15 @@ config :auth_bantculture_com, AuthBantcultureComWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "Mv4UHT3mB0Nxof+VHgD8OIGUXs//o0WoHscE6OJ0DOxDvovPsfr2pG9QHWdXjZD3",
   watchers: []
+
+config :auth_bantculture_com, AuthBantcultureCom.Repo,
+  url:
+    System.get_env("AUTH_DATABASE_URL") ||
+      System.get_env("DATABASE_URL") ||
+      read_shared_env.("DATABASE_URL") ||
+      raise("AUTH_DATABASE_URL or DATABASE_URL is missing"),
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 5
 
 # ## SSL Support
 #

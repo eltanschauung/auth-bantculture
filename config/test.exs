@@ -1,5 +1,21 @@
 import Config
 
+shared_env = Path.expand("~/.config/eirinchan-shared.env")
+
+read_shared_env = fn key ->
+  if File.exists?(shared_env) do
+    shared_env
+    |> File.read!()
+    |> String.split(~r/\R/, trim: true)
+    |> Enum.find_value(fn line ->
+      case String.split(line, "=", parts: 2) do
+        [^key, value] -> value
+        _ -> nil
+      end
+    end)
+  end
+end
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :auth_bantculture_com, AuthBantcultureComWeb.Endpoint,
@@ -16,3 +32,11 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+config :auth_bantculture_com, AuthBantcultureCom.Repo,
+  url:
+    System.get_env("AUTH_TEST_DATABASE_URL") ||
+      read_shared_env.("AUTH_TEST_DATABASE_URL") ||
+      raise("AUTH_TEST_DATABASE_URL is missing"),
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 2

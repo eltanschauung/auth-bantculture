@@ -7,7 +7,9 @@ defmodule AuthBantcultureCom.Application do
   def start(_type, _args) do
     children = [
       AuthBantcultureComWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:auth_bantculture_com, :dns_cluster_query) || :ignore},
+      AuthBantcultureCom.Repo,
+      {DNSCluster,
+       query: Application.get_env(:auth_bantculture_com, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: AuthBantcultureCom.PubSub},
       AuthBantcultureCom.AuthThrottle,
       AuthBantcultureComWeb.Endpoint

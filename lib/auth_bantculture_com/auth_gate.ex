@@ -3,6 +3,8 @@ defmodule AuthBantcultureCom.AuthGate do
 
   alias AuthBantcultureCom.AuthThrottle
   alias AuthBantcultureCom.ClientIP
+  alias AuthBantcultureCom.IpAccessEntry
+  alias AuthBantcultureCom.Repo
 
   def submit(conn, entered_password) do
     ip = ClientIP.effective_ip(conn)
@@ -12,7 +14,7 @@ defmodule AuthBantcultureCom.AuthGate do
 
     with :ok <- AuthThrottle.allowed?(ip_string),
          true <- valid_password?(password, passwords()),
-         :ok <- append_success(subnet, password, ip_string) do
+         {:ok, _entry} <- record_success(subnet, password) do
       AuthThrottle.clear(ip_string)
 
       {:ok,
@@ -55,19 +57,21 @@ defmodule AuthBantcultureCom.AuthGate do
 
   defp secure_compare?(_left, _right), do: false
 
-  defp append_success(subnet, password, ip_string) do
-    line = subnet <> "\n#" <> password <> " " <> timestamp() <> " " <> ip_string <> "\n"
-    File.write(Application.fetch_env!(:auth_bantculture_com, :access_path), line, [:append])
+  defp record_success(subnet, password) do
+    Repo.insert(%IpAccessEntry{ip: subnet, password: password, granted_at: timestamp()})
   end
 
   defp append_denied(subnet, password, ip_string) do
-    line = subnet <> "#" <> password <> " " <> timestamp() <> ip_string <> "\n"
-    File.write(Application.fetch_env!(:auth_bantculture_com, :access_denied_log_path), line, [:append])
+    line =
+      subnet <>
+        "#" <> password <> " " <> NaiveDateTime.to_string(timestamp()) <> ip_string <> "\n"
+
+    File.write(Application.fetch_env!(:auth_bantculture_com, :access_denied_log_path), line, [
+      :append
+    ])
   end
 
   defp timestamp do
-    NaiveDateTime.local_now()
-    |> NaiveDateTime.truncate(:second)
-    |> NaiveDateTime.to_string()
+    NaiveDateTime.local_now() |> NaiveDateTime.truncate(:second)
   end
 end
