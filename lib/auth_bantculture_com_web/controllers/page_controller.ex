@@ -2,6 +2,7 @@ defmodule AuthBantcultureComWeb.PageController do
   use AuthBantcultureComWeb, :controller
 
   alias AuthBantcultureCom.AuthGate
+  alias AuthBantcultureCom.InstanceConfig
   require Logger
 
   def home(conn, _params) do
@@ -11,6 +12,8 @@ defmodule AuthBantcultureComWeb.PageController do
       layout: false,
       error: nil,
       success?: false,
+      title: auth_config()["title"],
+      message: auth_config()["message"],
       redirect_url: Application.fetch_env!(:auth_bantculture_com, :success_redirect_url)
     )
   end
@@ -20,7 +23,14 @@ defmodule AuthBantcultureComWeb.PageController do
       {:ok, %{redirect_url: redirect_url}} ->
         conn
         |> no_store()
-        |> render(:home, layout: false, error: nil, success?: true, redirect_url: redirect_url)
+        |> render(:home,
+          layout: false,
+          error: nil,
+          success?: true,
+          title: auth_config()["title"],
+          message: auth_config()["message"],
+          redirect_url: redirect_url
+        )
 
       {:error, :throttled} ->
         conn
@@ -30,6 +40,8 @@ defmodule AuthBantcultureComWeb.PageController do
           layout: false,
           error: "Too many attempts. Try again later.",
           success?: false,
+          title: auth_config()["title"],
+          message: auth_config()["message"],
           redirect_url: Application.fetch_env!(:auth_bantculture_com, :success_redirect_url)
         )
 
@@ -38,8 +50,10 @@ defmodule AuthBantcultureComWeb.PageController do
         |> no_store()
         |> render(:home,
           layout: false,
-          error: "Incorrect password.",
+          error: "Invalid password.",
           success?: false,
+          title: auth_config()["title"],
+          message: auth_config()["message"],
           redirect_url: Application.fetch_env!(:auth_bantculture_com, :success_redirect_url)
         )
 
@@ -53,10 +67,14 @@ defmodule AuthBantcultureComWeb.PageController do
           layout: false,
           error: "Temporary server problem. Try again later.",
           success?: false,
+          title: auth_config()["title"],
+          message: auth_config()["message"],
           redirect_url: Application.fetch_env!(:auth_bantculture_com, :success_redirect_url)
         )
     end
   end
+
+  defp auth_config, do: InstanceConfig.ip_access_auth_config()
 
   defp no_store(conn) do
     conn

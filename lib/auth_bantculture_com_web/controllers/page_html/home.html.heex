@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <title>KRAKABOOM</title>
-    <link rel="icon" type="image/x-icon" href={~p"/favicon.ico"} />
-    <link rel="stylesheet" href={~p"/yotsuba.css"} />
+    <title><%= @title %></title>
+    <link rel="icon" type="image/x-icon" href="/auth/favicon.ico" />
+    <link rel="stylesheet" href="/auth/yotsuba.css" />
     <style>
       body {
         text-align: center;
@@ -63,7 +63,8 @@
     </style>
   </head>
   <body>
-    <img src={~p"/authlanding2.png"} />
+    <img src="/auth/authlanding2.png" />
+    <p><%= @message %></p>
     <div class="password-form" autocomplete="off">
       <form action={~p"/"} method="post" autocomplete="off">
         <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
@@ -75,6 +76,7 @@
       </form>
     </div>
 
+    <p :if={@success?}>Access granted.</p>
     <p :if={@error} class="error-message"><%= @error %></p>
 
     <br />

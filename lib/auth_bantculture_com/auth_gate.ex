@@ -56,9 +56,13 @@ defmodule AuthBantcultureCom.AuthGate do
   end
 
   defp append_denied(subnet, password, ip_string) do
+    fingerprint =
+      :crypto.hash(:sha256, password)
+      |> Base.encode16(case: :lower)
+
     line =
       subnet <>
-        "#" <> password <> " " <> NaiveDateTime.to_string(timestamp()) <> ip_string <> "\n"
+        "#sha256:" <> fingerprint <> " " <> NaiveDateTime.to_string(timestamp()) <> " " <> ip_string <> "\n"
 
     File.write(Application.fetch_env!(:auth_bantculture_com, :access_denied_log_path), line, [
       :append
