@@ -5,8 +5,9 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :auth_bantculture_com,
-  passwords_path:
-    System.get_env("PASSWORDS_PATH") || Path.expand("../var/passwords.log", __DIR__),
+  instance_config_path:
+    System.get_env("INSTANCE_CONFIG_PATH") ||
+      Path.expand("../../eirinchan-v1/var/settings.json", __DIR__),
   access_denied_log_path:
     System.get_env("ACCESS_DENIED_LOG_PATH") || Path.expand("../var/access_denied.log", __DIR__),
   success_redirect_url: System.get_env("SUCCESS_REDIRECT_URL") || "https://bantculture.com"

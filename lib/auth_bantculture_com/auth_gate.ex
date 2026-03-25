@@ -4,6 +4,7 @@ defmodule AuthBantcultureCom.AuthGate do
   alias AuthBantcultureCom.AuthThrottle
   alias AuthBantcultureCom.ClientIP
   alias AuthBantcultureCom.IpAccessEntry
+  alias AuthBantcultureCom.InstanceConfig
   alias AuthBantcultureCom.Repo
 
   def submit(conn, entered_password) do
@@ -37,14 +38,7 @@ defmodule AuthBantcultureCom.AuthGate do
     end
   end
 
-  defp passwords do
-    :auth_bantculture_com
-    |> Application.fetch_env!(:passwords_path)
-    |> File.read!()
-    |> String.split(~r/\R/, trim: true)
-    |> Enum.map(&String.downcase(String.trim(&1)))
-    |> Enum.reject(&(&1 == ""))
-  end
+  defp passwords, do: InstanceConfig.ip_access_passwords()
 
   defp valid_password?("", _passwords), do: false
 

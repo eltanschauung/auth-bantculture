@@ -21,6 +21,16 @@ try do
     """,
     []
   )
+
+  Ecto.Adapters.SQL.query!(
+    AuthBantcultureCom.Repo,
+    """
+    CREATE TABLE IF NOT EXISTS ip_access_passwords (
+      password varchar NOT NULL
+    )
+    """,
+    []
+  )
 after
   Ecto.Adapters.SQL.Sandbox.stop_owner(owner)
 end
