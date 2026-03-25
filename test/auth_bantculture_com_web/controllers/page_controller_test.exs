@@ -12,7 +12,16 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
     instance_config_path = Path.join(base, "settings.json")
 
     File.write!(denied_path, "")
-    File.write!(instance_config_path, Jason.encode!(%{"ip_access_passwords" => ["tewi", "yukari"]}))
+    File.write!(
+      instance_config_path,
+      Jason.encode!(%{
+        "ip_access_passwords" => ["tewi", "yukari"],
+        "ip_access_auth" => %{
+          "title" => "IP Access Authentication",
+          "message" => "Enter a password to gain access."
+        }
+      })
+    )
     Repo.delete_all(IpAccessEntry)
 
     previous = [
@@ -39,10 +48,11 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
   test "GET / renders the auth form", %{conn: conn} do
     conn = get(conn, "/")
     page = html_response(conn, 200)
-    assert page =~ "KRAKABOOM"
+    assert page =~ "IP Access Authentication"
+    assert page =~ "Enter a password to gain access."
     assert page =~ ~s(name="password")
-    assert page =~ ~s(/authlanding2.png)
-    assert page =~ ~s(/yotsuba.css)
+    assert page =~ ~s(/auth/authlanding2.png)
+    assert page =~ ~s(/auth/yotsuba.css)
     assert get_resp_header(conn, "content-security-policy") != []
   end
 
@@ -54,6 +64,7 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
       |> post("/", %{"password" => "TeWi"})
 
     page = html_response(conn, 200)
+    assert page =~ "Access granted."
     assert page =~ "Correct. Not being redirected?"
 
     assert [%IpAccessEntry{ip: "198.51.100.0/24", password: "tewi", granted_at: %NaiveDateTime{}}] =
@@ -67,9 +78,10 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
       |> post("/", %{"password" => "wrongpass"})
 
     page = html_response(conn, 200)
-    assert page =~ "Incorrect password."
+    assert page =~ "Invalid password."
 
     written = File.read!(denied_path)
-    assert written =~ "203.0.113.0/24#wrongpass"
+    assert written =~ "203.0.113.0/24#sha256:"
+    refute written =~ "wrongpass"
   end
 end
