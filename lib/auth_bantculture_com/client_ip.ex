@@ -3,6 +3,11 @@ defmodule AuthBantcultureCom.ClientIP do
 
   alias AuthBantcultureCom.CIDR
 
+  @trusted_gateway_cidrs [
+    "127.0.0.0/8",
+    "::1/128"
+  ]
+
   @cloudflare_cidrs [
     "173.245.48.0/20",
     "103.21.244.0/22",
@@ -31,35 +36,83 @@ defmodule AuthBantcultureCom.ClientIP do
   def effective_ip(conn) do
     remote_ip = conn.remote_ip
 
-    if trusted_cloudflare_proxy?(remote_ip) do
-      conn
-      |> Plug.Conn.get_req_header("cf-connecting-ip")
-      |> List.first()
-      |> parse_header_ip(remote_ip)
-    else
-      remote_ip
+    ip =
+      cond do
+      trusted_gateway_proxy?(remote_ip) ->
+        conn
+        |> Plug.Conn.get_req_header("x-forwarded-for")
+        |> List.first()
+        |> parse_forwarded_for(remote_ip)
+
+      trusted_cloudflare_proxy?(remote_ip) ->
+        conn
+        |> Plug.Conn.get_req_header("cf-connecting-ip")
+        |> List.first()
+        |> parse_header_ip(remote_ip)
+
+      true ->
+        remote_ip
+      end
+
+    normalize_ip(ip)
+  end
+
+  def format_ip(ip_tuple), do: ip_tuple |> normalize_ip() |> :inet.ntoa() |> to_string()
+
+  def subnet_string(ip) do
+    case normalize_ip(ip) do
+      {a, b, c, _d} ->
+        Enum.join([a, b, c], ".") <> ".0/24"
+
+      {a, b, c, _d, _e, _f, _g, _h} ->
+        [a, b, c]
+        |> Enum.map(&Integer.to_string(&1, 16))
+        |> Enum.join(":")
+        |> Kernel.<>("::/48")
     end
   end
 
-  def format_ip(ip_tuple), do: ip_tuple |> :inet.ntoa() |> to_string()
-
-  def subnet_string({a, b, c, _d}), do: Enum.join([a, b, c], ".") <> ".0/24"
-
-  def subnet_string({a, b, c, _d, _e, _f, _g, _h}) do
-    [a, b, c]
-    |> Enum.map(&Integer.to_string(&1, 16))
-    |> Enum.join(":")
-    |> Kernel.<>("::/48")
-  end
-
   defp trusted_cloudflare_proxy?(ip), do: Enum.any?(@cloudflare_cidrs, &CIDR.match?(ip, &1))
+  defp trusted_gateway_proxy?(ip), do: Enum.any?(@trusted_gateway_cidrs, &CIDR.match?(ip, &1))
 
   defp parse_header_ip(nil, fallback), do: fallback
 
   defp parse_header_ip(value, fallback) do
     case :inet.parse_address(String.to_charlist(String.trim(value))) do
-      {:ok, parsed} -> parsed
+      {:ok, parsed} -> normalize_ip(parsed)
       _ -> fallback
     end
   end
+
+  defp parse_forwarded_for(nil, fallback), do: fallback
+
+  defp parse_forwarded_for(value, fallback) do
+    value
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.find_value(&parse_forwarded_ip/1)
+    |> case do
+      nil -> fallback
+      ip -> ip
+    end
+  end
+
+  defp parse_forwarded_ip(value) do
+    case :inet.parse_address(String.to_charlist(value)) do
+      {:ok, parsed} -> normalize_ip(parsed)
+      _ -> nil
+    end
+  end
+
+  defp normalize_ip({0, 0, 0, 0, 0, 0xFFFF, high, low})
+       when high in 0..0xFFFF and low in 0..0xFFFF do
+    {
+      Bitwise.bsr(high, 8),
+      Bitwise.band(high, 0xFF),
+      Bitwise.bsr(low, 8),
+      Bitwise.band(low, 0xFF)
+    }
+  end
+
+  defp normalize_ip(ip), do: ip
 end

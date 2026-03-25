@@ -19,7 +19,7 @@ defmodule AuthBantcultureCom.MixProject do
   def application do
     [
       mod: {AuthBantcultureCom.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :ecto_sql]
     ]
   end
 
@@ -37,9 +37,11 @@ defmodule AuthBantcultureCom.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.2"},
       {:floki, ">= 0.30.0", only: :test},
+      {:ecto_sql, "~> 3.10.2"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
+      {:postgrex, "~> 0.17.5"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"}
     ]

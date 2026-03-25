@@ -8,6 +8,7 @@
 import Config
 
 config :auth_bantculture_com,
+  ecto_repos: [AuthBantcultureCom.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
