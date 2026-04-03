@@ -1,4 +1,4 @@
-defmodule AuthBantcultureComWeb.PageControllerTest do
+defmodule AuthBantcultureComWeb.AuthControllerTest do
   use AuthBantcultureComWeb.ConnCase, async: false
 
   alias AuthBantcultureCom.IpAccessEntry
@@ -12,6 +12,7 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
     instance_config_path = Path.join(base, "settings.json")
 
     File.write!(denied_path, "")
+
     File.write!(
       instance_config_path,
       Jason.encode!(%{
@@ -22,17 +23,20 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
         }
       })
     )
+
     Repo.delete_all(IpAccessEntry)
 
     previous = [
       instance_config_path: Application.get_env(:auth_bantculture_com, :instance_config_path),
       access_denied_log_path: Application.get_env(:auth_bantculture_com, :access_denied_log_path),
-      success_redirect_url: Application.get_env(:auth_bantculture_com, :success_redirect_url)
+      success_redirect_url: Application.get_env(:auth_bantculture_com, :success_redirect_url),
+      public_auth_url: Application.get_env(:auth_bantculture_com, :public_auth_url)
     ]
 
     Application.put_env(:auth_bantculture_com, :instance_config_path, instance_config_path)
     Application.put_env(:auth_bantculture_com, :access_denied_log_path, denied_path)
     Application.put_env(:auth_bantculture_com, :success_redirect_url, "https://bantculture.com")
+    Application.put_env(:auth_bantculture_com, :public_auth_url, nil)
 
     on_exit(fn ->
       Enum.each(previous, fn {key, value} ->
@@ -45,27 +49,27 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
     %{denied_path: denied_path}
   end
 
-  test "GET / renders the auth form", %{conn: conn} do
-    conn = get(conn, "/")
+  test "GET /auth renders the auth form", %{conn: conn} do
+    conn = get(conn, "/auth")
     page = html_response(conn, 200)
+
     assert page =~ "IP Access Authentication"
     assert page =~ "Enter a password to gain access."
+    assert page =~ ~s(action="/auth")
     assert page =~ ~s(name="password")
     assert page =~ ~s(/auth/authlanding2.png)
     assert page =~ ~s(/auth/yotsuba.css)
     assert get_resp_header(conn, "content-security-policy") != []
   end
 
-  test "valid password writes to access entries and shows redirect message", %{conn: conn} do
+  test "valid password writes to access entries and redirects to return_to", %{conn: conn} do
     conn =
       conn
       |> Map.put(:remote_ip, {173, 245, 48, 10})
       |> put_req_header("cf-connecting-ip", "198.51.100.9")
-      |> post("/", %{"password" => "TeWi"})
+      |> post("/auth", %{"password" => "TeWi", "return_to" => "/bant/"})
 
-    page = html_response(conn, 200)
-    assert page =~ "Access granted."
-    assert page =~ "Correct. Not being redirected?"
+    assert redirected_to(conn, 302) == "https://bantculture.com/bant/"
 
     assert [%IpAccessEntry{ip: "198.51.100.0/24", password: "tewi", granted_at: %NaiveDateTime{}}] =
              Repo.all(IpAccessEntry)
@@ -75,7 +79,7 @@ defmodule AuthBantcultureComWeb.PageControllerTest do
     conn =
       conn
       |> Map.put(:remote_ip, {203, 0, 113, 7})
-      |> post("/", %{"password" => "wrongpass"})
+      |> post("/auth", %{"password" => "wrongpass"})
 
     page = html_response(conn, 200)
     assert page =~ "Invalid password."

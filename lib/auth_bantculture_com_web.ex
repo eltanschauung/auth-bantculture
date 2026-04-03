@@ -2,7 +2,7 @@ defmodule AuthBantcultureComWeb do
   @moduledoc false
 
   def static_paths,
-    do: ~w(assets fonts images favicon.ico favicon.png robots.txt authlanding2.png fade-yotsuba.png yotsuba.css)
+    do: ~w(assets fonts images robots.txt auth)
 
   def router do
     quote do

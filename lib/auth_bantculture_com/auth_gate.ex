@@ -21,8 +21,7 @@ defmodule AuthBantcultureCom.AuthGate do
       {:ok,
        %{
          effective_ip: ip_string,
-         subnet: subnet,
-         redirect_url: Application.fetch_env!(:auth_bantculture_com, :success_redirect_url)
+         subnet: subnet
        }}
     else
       {:error, :throttled} ->
@@ -62,7 +61,8 @@ defmodule AuthBantcultureCom.AuthGate do
 
     line =
       subnet <>
-        "#sha256:" <> fingerprint <> " " <> NaiveDateTime.to_string(timestamp()) <> " " <> ip_string <> "\n"
+        "#sha256:" <>
+        fingerprint <> " " <> NaiveDateTime.to_string(timestamp()) <> " " <> ip_string <> "\n"
 
     File.write(Application.fetch_env!(:auth_bantculture_com, :access_denied_log_path), line, [
       :append

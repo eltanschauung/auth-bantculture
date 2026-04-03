@@ -11,7 +11,10 @@ defmodule AuthBantcultureComWeb.Router do
   scope "/", AuthBantcultureComWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-    post "/", PageController, :submit
+    get "/healthz", GateController, :health
+    match :*, "/gate", GateController, :check
+    get "/auth", AuthController, :show
+    post "/auth", AuthController, :submit
+    match :*, "/*path", GateController, :dispatch
   end
 end

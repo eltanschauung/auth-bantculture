@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <title><%= @title %></title>
+    <link rel="icon" type="image/x-icon" href="/auth/favicon.ico" />
+    <link rel="stylesheet" href="/auth/yotsuba.css" />
+    <style>
+      body {
+        margin: 0;
+        text-align: center;
+        font-family: tahoma, sans-serif;
+      }
+
+      .auth-shell {
+        width: min(100%, 32rem);
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      .auth-image {
+        max-width: min(25rem, 100%);
+        display: block;
+        margin: 0 auto 1rem;
+      }
+
+      .auth-copy {
+        margin: 0 0 1rem;
+      }
+
+      .auth-form {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .auth-form input[type="password"] {
+        width: min(20rem, 100%);
+        border: 1px solid #ccc;
+        padding: 0.15rem 0.25rem;
+      }
+
+      .auth-error {
+        color: #800000;
+        margin-top: 1rem;
+        font-weight: 700;
+      }
+
+      .auth-footer {
+        margin-top: 12vh;
+      }
+
+      .auth-footer hr {
+        border: 1px solid #8b8b78;
+      }
+
+      .auth-footer small {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="auth-shell">
+      <img class="auth-image" src="/auth/authlanding2.png" alt="" />
+      <p class="auth-copy"><%= @message %></p>
+
+      <form class="auth-form" action={~p"/auth"} method="post" autocomplete="off">
+        <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+        <input type="hidden" name="return_to" value={@return_to} />
+        <input type="password" name="password" aria-label="Password" autofocus />
+        <button type="submit">Enter</button>
+      </form>
+
+      <p :if={@error} class="auth-error"><%= @error %></p>
+
+      <footer class="auth-footer">
+        <hr />
+        <small>Access control is enforced before the main site is served.</small>
+      </footer>
+    </main>
+  </body>
+</html>
