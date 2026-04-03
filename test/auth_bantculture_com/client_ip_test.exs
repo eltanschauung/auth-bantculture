@@ -34,7 +34,9 @@ defmodule AuthBantcultureCom.ClientIPTest do
 
   test "formats ipv4 and ipv6 subnets like the php app" do
     assert ClientIP.subnet_string({203, 0, 113, 9}) == "203.0.113.0/24"
-    assert ClientIP.subnet_string({0x2606, 0x4700, 0x1234, 0, 0, 0, 0, 1}) == "2606:4700:1234::/48"
+
+    assert ClientIP.subnet_string({0x2606, 0x4700, 0x1234, 0, 0, 0, 0, 1}) ==
+             "2606:4700:1234::/48"
   end
 
   test "normalizes ipv4-mapped ipv6 addresses back to ipv4" do

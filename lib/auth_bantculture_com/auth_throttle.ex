@@ -23,9 +23,14 @@ defmodule AuthBantcultureCom.AuthThrottle do
 
   def record_failure(key, now \\ System.system_time(:second)) do
     case :ets.lookup(@table, key) do
-      [] -> :ets.insert(@table, {key, 1, now})
-      [{^key, _count, first_at}] when now - first_at >= @window_seconds -> :ets.insert(@table, {key, 1, now})
-      [{^key, count, first_at}] -> :ets.insert(@table, {key, count + 1, first_at})
+      [] ->
+        :ets.insert(@table, {key, 1, now})
+
+      [{^key, _count, first_at}] when now - first_at >= @window_seconds ->
+        :ets.insert(@table, {key, 1, now})
+
+      [{^key, count, first_at}] ->
+        :ets.insert(@table, {key, count + 1, first_at})
     end
 
     :ok
@@ -35,7 +40,14 @@ defmodule AuthBantcultureCom.AuthThrottle do
 
   @impl true
   def init(state) do
-    :ets.new(@table, [:named_table, :set, :public, read_concurrency: true, write_concurrency: true])
+    :ets.new(@table, [
+      :named_table,
+      :set,
+      :public,
+      read_concurrency: true,
+      write_concurrency: true
+    ])
+
     schedule_cleanup()
     {:ok, state}
   end

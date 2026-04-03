@@ -38,20 +38,20 @@ defmodule AuthBantcultureCom.ClientIP do
 
     ip =
       cond do
-      trusted_gateway_proxy?(remote_ip) ->
-        conn
-        |> Plug.Conn.get_req_header("x-forwarded-for")
-        |> List.first()
-        |> parse_forwarded_for(remote_ip)
+        trusted_gateway_proxy?(remote_ip) ->
+          conn
+          |> Plug.Conn.get_req_header("x-forwarded-for")
+          |> List.first()
+          |> parse_forwarded_for(remote_ip)
 
-      trusted_cloudflare_proxy?(remote_ip) ->
-        conn
-        |> Plug.Conn.get_req_header("cf-connecting-ip")
-        |> List.first()
-        |> parse_header_ip(remote_ip)
+        trusted_cloudflare_proxy?(remote_ip) ->
+          conn
+          |> Plug.Conn.get_req_header("cf-connecting-ip")
+          |> List.first()
+          |> parse_header_ip(remote_ip)
 
-      true ->
-        remote_ip
+        true ->
+          remote_ip
       end
 
     normalize_ip(ip)
